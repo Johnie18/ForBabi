@@ -1,12 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
-  const images = ["/portrait.jpg", "/images/img2.jpg", "/images/img3.jpg"];
+  const images = [
+    "/image1.jpg","/image2.jpeg","/image3.jpeg","/image4.jpeg","/image5.jpeg",
+    "/image6.jpeg","/image7.jpeg","/image8.jpeg","/image9.jpeg","/image10.jpeg",
+    "/image11.jpeg","/image12.jpeg","/image13.jpeg","/image14.jpeg","/image15.jpeg",
+    "/image16.jpeg","/image17.jpeg","/image18.jpeg","/image19.jpeg","/image20.jpeg",
+    "/image21.jpeg",
+  ];
+
   const [current, setCurrent] = useState(0);
-  const [hearts, setHearts] = useState<{ left: string; duration: string; delay: string }[]>([]);
-  const [showPopover, setShowPopover] = useState(false); // popover state
+  const [hearts, setHearts] = useState<any[]>([]);
+  const [cardHearts, setCardHearts] = useState<any[]>([]);
+  const [showPopover, setShowPopover] = useState(false);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [musicStarted, setMusicStarted] = useState(false);
+
+  const startMusic = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+      setMusicStarted(true);
+    }
+  };
 
   useEffect(() => {
     const arr = [...Array(20)].map(() => ({
@@ -15,6 +33,21 @@ export default function Home() {
       delay: `${Math.random() * 5}s`,
     }));
     setHearts(arr);
+
+    const card = [...Array(25)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      duration: `${4 + Math.random() * 4}s`,
+      delay: `${Math.random() * 4}s`,
+      size: `${16 + Math.random() * 16}px`,
+    }));
+    setCardHearts(card);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const nextImage = () => setCurrent((prev) => (prev + 1) % images.length);
@@ -23,12 +56,28 @@ export default function Home() {
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center bg-pink-100 overflow-hidden p-4">
 
-      {/* Background floating hearts */}
+      {!musicStarted && (
+        <div
+          onClick={startMusic}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black text-white text-center cursor-pointer"
+        >
+          <div>
+            <h1 className="text-3xl font-bold mb-4">💖 Tap Here BABI! 💖</h1>
+            <p className="opacity-80">Enjoy the show…</p>
+          </div>
+        </div>
+      )}
+
+      <audio ref={audioRef} loop>
+        <source src="/romantic.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* background hearts */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {hearts.map((heart, i) => (
           <div
             key={i}
-            className="absolute text-pink-400 text-3xl animate-float"
+            className="absolute text-pink-400 text-3xl animate-float pointer-events-none"
             style={{
               left: heart.left,
               animationDuration: heart.duration,
@@ -40,90 +89,125 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Main card */}
-      <div className="relative z-10 flex flex-col items-center p-6 bg-white/30 backdrop-blur-md rounded-xl shadow-2xl max-w-3xl text-center">
+      {/* CARD */}
+      <div className="relative z-10 flex flex-col items-center p-4 sm:p-6 bg-pink rounded-xl shadow-2xl w-full max-w-5xl text-center overflow-hidden">
 
-        <h1 className="text-3xl font-bold text-red-500 mb-4">
+        {/* card hearts */}
+        <div className="absolute inset-0 pointer-events-none">
+          {cardHearts.map((heart, i) => (
+            <div
+              key={i}
+              className="absolute animate-float2 text-pink-300 pointer-events-none"
+              style={{
+                left: heart.left,
+                fontSize: heart.size,
+                animationDuration: heart.duration,
+                animationDelay: heart.delay,
+              }}
+            >
+              💗
+            </div>
+          ))}
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-bold text-red-500 mb-4 relative z-10">
           💌 HAPPY VALENTINE'S BABI 💌
         </h1>
 
-        {/* Slider */}
-        <div className="relative w-full h-96 overflow-hidden">
+        {/* slider */}
+        <div className="relative w-full h-[50vh] sm:h-[70vh] max-h-[650px] overflow-hidden rounded-lg z-10">
           {images.map((img, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${index === current ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 transition-opacity duration-700 ${
+                index === current ? "opacity-100" : "opacity-0"
+              }`}
               style={{
                 backgroundImage: `url(${img})`,
-                backgroundSize: "cover",
+                backgroundSize: "contain",
                 backgroundPosition: "center",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
+                backgroundRepeat: "no-repeat",
               }}
-            >
-              <p className="font-mono text-xs sm:text-sm md:text-base lg:text-lg leading-snug whitespace-pre-wrap">
-                {`HAPPYVALENTINESBABIHAPPYVALENTINESBABI`}
-              </p>
-            </div>
+            />
           ))}
+        </div>
 
-          <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 rounded-full p-2 hover:bg-white/70 z-20">
+        {/* controls */}
+        <div className="flex gap-4 mt-4 z-10">
+          <button
+            onClick={prevImage}
+            className="bg-white/70 rounded-full px-5 py-3 hover:bg-white text-lg"
+          >
             ◀
           </button>
-          <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 rounded-full p-2 hover:bg-white/70 z-20">
+          <button
+            onClick={nextImage}
+            className="bg-white/70 rounded-full px-5 py-3 hover:bg-white text-lg"
+          >
             ▶
           </button>
         </div>
 
-        {/* Popover Button */}
-        <div className="mt-6 w-full max-w-md flex flex-col gap-3">
+        {/* message button */}
+        <div className="mt-6 w-full max-w-md z-20">
           <button
-            onClick={() => setShowPopover(!showPopover)}
-            className="w-full bg-red-500 text-white font-bold py-2 rounded-md hover:bg-red-600 transition"
+            onClick={() => setShowPopover(true)}
+            className="w-full bg-red-500 text-white font-bold py-3 rounded-md hover:bg-red-600 active:scale-95 transition text-lg"
           >
-            {showPopover ? "Hide Message" : "Show Message"}
+            Open The Message!
           </button>
         </div>
 
-        {/* Popover */}
-        {showPopover && (
-          <div className="absolute top-40 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-lg p-4 z-30 max-w-xs text-center animate-fade-in">
-            <p className="text-red-500 font-semibold">
-              💖 This is the special text you typed! 💖
-            </p>
-          </div>
-        )}
-
-        {/* Floating hearts inside card */}
-        <div className="flex flex-wrap justify-center mt-6 gap-2">
-          <span className="animate-pulse text-2xl text-red-400">💖</span>
-          <span className="animate-pulse text-2xl text-pink-400">💗</span>
-          <span className="animate-pulse text-2xl text-pink-500">💘</span>
-          <span className="animate-pulse text-2xl text-red-500">💕</span>
+        <div className="flex flex-wrap justify-center mt-6 gap-2 z-10 text-xl">
+          💖 💗 💘 💕
         </div>
       </div>
 
-      {/* Footer hearts */}
-      <div className="absolute bottom-10 flex gap-2 animate-bounce z-10 text-3xl text-pink-500">
-        💖 💕 💘 💗 💓
-      </div>
+      {/* modal */}
+      {showPopover && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 text-center animate-fade-in">
+            <p className="text-red-500 font-semibold leading-relaxed text-lg">
+              💖 Happy Valentines Babi. Thankyou gd babi sa tanan nga sacrifice kg pagpalangga. Pag atipan sakon kg pag inchindi baii Pakabakod lang babi. Godbless and Goodluck sa Board Exam mo babi ari lang kodi para simo para updan ka sng mga rants kg stress mo.. tunga tungon tlg ang Problema ah hahahaha sige lg after pila ka months ma permahan Babi maka bakal2 nmn ta kag ka bawi nako simo Babi Thank You gid babi. Iloveyousomuch Babi Thankyou sa tanan2. Lets to dis ah Kabay pa tanan ta nga plans makwa ta. Amat2 lang babi. HAPPY VALENTINE'S BABI ILOVEYOU ALWAYS 💖
+              <br />BY: DENVER DEV
+            </p>
+
+            <button
+              onClick={() => setShowPopover(false)}
+              className="mt-4 w-full bg-red-500 text-white font-bold py-3 rounded-md hover:bg-red-600 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes float {
-          0% { transform: translateY(100vh) scale(0.8); opacity: 0; }
+          0% { transform: translateY(100vh); opacity: 0; }
           50% { opacity: 1; }
-          100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+          100% { transform: translateY(-10vh); opacity: 0; }
         }
+
+        @keyframes float2 {
+          0% { transform: translateY(110%); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(-10%); opacity: 0; }
+        }
+
         .animate-float {
-          animation-name: float;
-          animation-iteration-count: infinite;
-          animation-timing-function: linear;
+          animation: float linear infinite;
         }
+
+        .animate-float2 {
+          animation: float2 linear infinite;
+        }
+
         @keyframes fade-in {
           0% { opacity: 0; transform: translateY(-10px); }
           100% { opacity: 1; transform: translateY(0); }
         }
+
         .animate-fade-in {
           animation: fade-in 0.3s ease-out forwards;
         }
